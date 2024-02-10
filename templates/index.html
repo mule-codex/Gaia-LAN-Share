@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='hmk_logo.png') }}">
+
+    <style>
+        body{
+            background-color: #cae8ff5d;
+            color: rgb(255, 255, 255) ;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 13px;
+            background-image: url("{{ url_for('static', filename='bg.jpg') }}");
+            background-size:auto; 
+
+        }
+        
+        .btn{
+                    display: inline-block;
+                    outline: 0;
+                    text-align: center;
+                    cursor: pointer;
+                    padding: 0px 16px;
+                    border-radius: 2px;
+                    min-width: 80px;
+                    height: 32px;
+                    background-color: rgb(0, 120, 212);
+                    color: rgb(255, 255, 255);
+                    font-size: 14px;
+                    font-weight: 400;
+                    box-sizing: border-box;
+                    border: 1px solid rgb(0, 120, 212);
+                    margin-left: 17%;
+                }
+        .btn{ :hover {
+                        background-color: rgb(16, 110, 190);
+                        border: 1px solid rgb(16, 110, 190);
+                    }
+                
+        }
+        .logo{
+            width: 30%;
+        }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gaia LAN File Sharing</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha384-p9nXb4o6qwSj5T06Tw8aE0kknJqD7S/XTgysCW4COOJ89jRYffJ2vgGzGWwqT+TI" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div>
+       <div style="height: 200px;"></div>
+    <img class="Logo" style="width: 40% ;margin-left: 30%;" src="{{ url_for('static', filename='hmk_logo.png') }}" alt="HMK Logo">
+
+
+    </div>
+  
+    <form id="uploadForm" method="POST" enctype="multipart/form-data">
+        
+        <h2 style="margin-left: 17%;">GAIA File Sharing</h2>
+        <p style="margin-left: 3%;">Upload Your documents and they will be processed shortly</p>
+
+        <div style="margin-left: 27.5%;">
+            
+        <input type="file" id="fileInput" name="fileInput">
+        <input type="hidden" id="filenameInput" name="filenameInput">
+        <br><br> 
+        <button class="btn"  id="uploadButton" type="submit">Upload</button>
+
+        </div>
+   
+    </form>
+    <div id="message"></div>
+    <script>
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+        document.getElementById('uploadForm').onsubmit = function(event) {
+            event.preventDefault();
+            var fileInput = document.getElementById('fileInput');
+            var file = fileInput.files[0];
+            var filename = file.name; // Get the file name
+            var filenameInput = document.getElementById('filenameInput');
+            filenameInput.value = filename; // Set the file name in the hidden input field
+            // Check if a file is selected
+            if (!file) {
+                document.getElementById('message').innerHTML = "Please select a file.";
+                return;
+            }
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var fileContent = e.target.result;
+                // Send the file name and content to the server
+                socket.emit('file_upload', {'filename': filename, 'file_content': fileContent});
+            }
+            reader.readAsText(file);
+            document.getElementById('message').innerHTML = "Uploading file...";
+        }
+        socket.on('file_saved', function(data) {
+            document.getElementById('message').innerHTML = data.message;
+        });
+        socket.on('file_received', function(data) {
+            document.getElementById('message').innerHTML = data.message;
+        });
+    </script>
+</body>
+</html>
